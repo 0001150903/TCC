@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Cliente | TEC&INOVA</title>
+    <!-- Inclui o Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclui a fonte Inter do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inclui Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6; /* Cinza claro de fundo */
+        }
+        /* Estilos para a caixa de mensagem de feedback */
+        #messageBox {
+            position: fixed; top: 2rem; left: 50%; transform: translateX(-50%);
+            padding: 1rem 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.5s ease, transform 0.5s ease; opacity: 0;
+            z-index: 1000; color: white; transform: translate(-50%, -100px);
+        }
+        #messageBox.show { opacity: 1; transform: translateX(-50%); }
+        #messageBox.success { background-color: #10B981; }
+        #messageBox.error { background-color: #EF4444; }
+        #messageBox.info { background-color: #3B82F6; }
+        
+        /* Estilos para o Modal */
+        #modal-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); z-index: 998;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        #modal-container.show { opacity: 1; pointer-events: auto; }
+        #modal-content {
+            background-color: white; padding: 2rem; border-radius: 1rem;
+            width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        #modal-container.show #modal-content { transform: scale(1); }
+    </style>
+</head>
+<body class="flex justify-center">
+
+    <!-- Caixa de Mensagem para Feedback -->
+    <div id="messageBox"></div>
+
+    <!-- Container do Modal -->
+    <div id="modal-container">
+        <div id="modal-content">
+            <!-- Conteúdo dinâmico será injetado aqui -->
+        </div>
+    </div>
+
+    <div class="w-full max-w-md bg-white min-h-screen shadow-lg">
+        <!-- Cabeçalho -->
+        <header class="bg-blue-800 text-white p-5 text-center rounded-b-2xl shadow-md relative">
+            <h1 class="text-2xl font-bold">TEC&INOVA</h1>
+            <p class="text-sm">Olá, <span id="userName">Cliente</span>! Bem-vindo(a).</p>
+            <button id="logoutButton" class="absolute top-4 right-4 text-white hover:text-gray-200 transition">
+                <i class="fa-solid fa-right-from-bracket fa-lg"></i>
+            </button>
+        </header>
+
+        <!-- Conteúdo Principal -->
+        <main class="p-6">
+            <!-- Cartão de Status do Atendimento -->
+            <section id="statusCard" class="bg-white rounded-xl p-5 text-center shadow-md border border-gray-100 mb-6">
+                <!-- Estado Inicial: Sem senha gerada -->
+                <div id="initialState">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Nenhum atendimento em andamento</h2>
+                    <p class="text-gray-500">Gere uma senha para entrar na fila.</p>
+                </div>
+                <!-- Estado Ativo: Com senha gerada -->
+                <div id="activeState" class="hidden">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">Status do seu Atendimento</h2>
+                    <div id="serviceTypeDisplay" class="text-base text-blue-700 font-semibold mb-2"></div>
+                    <div id="waitTime" class="text-5xl font-bold text-blue-600 my-3"></div>
+                    <div id="queuePosition" class="text-base text-gray-600"></div>
+                    <button id="cancelButton" class="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
+                        <i class="fa-solid fa-times"></i> Cancelar Atendimento
+                    </button>
+                </div>
+            </section>
+
+            <!-- Seção de Ações -->
+            <section class="mb-6">
+                <h3 class="text-md font-semibold text-gray-500 mb-3 text-center">INICIAR ATENDIMENTO</h3>
+                <div id="passwordActions" class="grid grid-cols-2 gap-4 mb-3">
+                    <button data-type="common" class="password-btn bg-blue-600 text-white p-4 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-ticket"></i> Comum
+                    </button>
+                    <button data-type="emergency" class="password-btn bg-red-600 text-white p-4 rounded-lg font-semibold hover:bg-red-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Emergencial
+                    </button>
+                </div>
+                 <button id="scheduleBtn" class="w-full bg-white text-blue-600 border-2 border-blue-600 p-4 rounded-lg font-semibold hover:bg-blue-50 transition flex items-center justify-center gap-2">
+                    <i class="fa-regular fa-calendar-days"></i> Agendar Atendimento
+                </button>
+            </section>
+
+            <!-- Seção de Links de Informação -->
+            <section>
+                 <a href="Acessibilidade.html" class="w-full text-left flex items-center gap-4 bg-gray-50 p-4 rounded-lg mb-3 hover:bg-gray-100 transition border">
+                    <i class="fa-solid fa-universal-access text-blue-600 text-2xl"></i>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Acessibilidade (PCD)</h3>
+                        <p class="text-sm text-gray-600">Configure preferências e solicite suporte.</p>
+                    </div>
+                </a>
+                <button id="infoBtn" class="w-full text-left flex items-center gap-4 bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition border">
+                    <i class="fa-solid fa-circle-info text-blue-600 text-2xl"></i>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Serviços e Informações</h3>
+                        <p class="text-sm text-gray-600">Explore o mapa, fale com o suporte e mais.</p>
+                    </div>
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ELEMENTOS DO DOM ---
+            const messageBox = document.getElementById('messageBox');
+            const initialStateDiv = document.getElementById('initialState');
+            const activeStateDiv = document.getElementById('activeState');
+            const passwordActionsDiv = document.getElementById('passwordActions');
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+            
+            // --- ESTADO DA APLICAÇÃO (SIMULADO) ---
+            let ticket = null;
+
+            // --- FUNÇÕES DO MODAL ---
+            function openModal(htmlContent) {
+                modalContent.innerHTML = htmlContent;
+                modalContainer.classList.add('show');
+            }
+
+            function closeModal() {
+                modalContainer.classList.remove('show');
+                setTimeout(() => { modalContent.innerHTML = ''; }, 300); // Limpa após a transição
+            }
+            
+            // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
+
+            function analyzeEmergencyRequest(orderDetails) {
+                const submitButton = modalContent.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analisando Prioridade...`;
+
+                setTimeout(() => {
+                    // Simula a análise: 60% de chance de ser aprovado como emergência
+                    const isApproved = Math.random() > 0.4; 
+
+                    if (isApproved) {
+                        createTicket('emergency', orderDetails);
+                        showMessage('Solicitação validada como emergencial!', 'success');
+                    } else {
+                        createTicket('common', orderDetails);
+                        showMessage('Análise: Pedido reclassificado como comum.', 'info');
+                    }
+                    closeModal();
+                }, 2500); // Simula 2.5s de análise
+            }
+
+            // --- CONTEÚDO DINÂMICO PARA MODAIS ---
+            function getOrderFormHTML(type) {
+                const title = type === 'common' ? 'Pedido Comum' : 'Pedido Emergencial';
+                const titleColor = type === 'common' ? 'text-blue-600' : 'text-red-600';
+
+                const emergencyJustificationHTML = `
+                    <div class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                        <label for="emergencyCriteria" class="block text-sm font-medium text-red-800">Critério de Emergência</label>
+                        <select id="emergencyCriteria" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                            <option value="" disabled selected>Selecione um critério...</option>
+                            <option value="Risco de Segurança">Risco de Segurança (Ambiental, Pessoal)</option>
+                            <option value="Carga Perecível">Carga Perecível / Sensível ao Tempo</option>
+                            <option value="Linha de Produção Parada">Parada de Linha de Produção</option>
+                            <option value="Equipamento Crítico">Equipamento Crítico Inoperante</option>
+                            <option value="Ordem Gerencial">Ordem de Gerência/Diretoria</option>
+                        </select>
+                        <label for="emergencyNotes" class="block text-sm font-medium text-red-800 mt-2">Justificativa Detalhada</label>
+                        <textarea id="emergencyNotes" rows="2" required placeholder="Detalhe a urgência aqui..." class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm"></textarea>
+                    </div>
+                `;
+
+                return `
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold ${titleColor}">${title}</h2>
+                        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+                    </div>
+                    <form id="orderForm">
+                        <div class="mb-4">
+                            <label for="serviceType" class="block text-sm font-medium text-gray-700">Tipo de Serviço</label>
+                            <select id="serviceType" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="" disabled selected>Selecione um serviço...</option>
+                                <option value="Recebimento de Mercadoria">Recebimento de Mercadoria</option>
+                                <option value="Retirada de Pedido">Retirada de Pedido</option>
+                                <option value="Devolução">Devolução</option>
+                                <option value="Visita Técnica">Visita Técnica</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        ${type === 'emergency' ? emergencyJustificationHTML : ''}
+
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700">Informações do Veículo</label>
+                            <select id="vehicleType" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500">
+                                <option value="Nenhum">Nenhum / Pedestre</option>
+                                <option value="Veículo Leve">Veículo Leve</option>
+                                <option value="Van / Utilitário">Van / Utilitário</option>
+                                <option value="Caminhão Toco/3/4">Caminhão Toco/3/4</option>
+                                <option value="Carreta / Bitrem">Carreta / Bitrem</option>
+                            </select>
+                            <input type="text" id="licensePlate" placeholder="Placa (Opcional)" class="mt-2 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div class="mt-6">
+                             <label for="notes" class="block text-sm font-medium text-gray-700">Observações Gerais</label>
+                             <textarea id="notes" rows="2" placeholder="Ex: Carga frágil, necessita de empilhadeira..." class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full mt-6 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">Confirmar e Entrar na Fila</button>
+                    </form>
+                `;
+            }
+
+            function getInfoHTML() {
+                return `
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-blue-600">Serviços e Informações</h2>
+                        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+                    </div>
+                    <div class="space-y-4 text-gray-700">
+                        <div>
+                            <h3 class="font-semibold text-lg"><i class="fa-solid fa-clock mr-2"></i>Horário de Funcionamento</h3>
+                            <p class="ml-6">Segunda a Sexta: 08:00 - 18:00</p>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg"><i class="fa-solid fa-phone mr-2"></i>Contatos Úteis</h3>
+                            <p class="ml-6">Logística e Agendamento: (31) XXXX-XXXX</p>
+                            <p class="ml-6">Segurança Patrimonial: (31) YYYY-YYYY</p>
+                        </div>
+                        <div>
+                           <a href="#" class="w-full text-left flex items-center gap-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                <i class="fa-solid fa-map-location-dot text-blue-600 text-xl"></i>
+                                <span>Visualizar Mapa do Armazém</span>
+                           </a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- FUNÇÕES DE UI ---
+            function showMessage(message, type = 'info') {
+                messageBox.textContent = message;
+                messageBox.className = ``; messageBox.classList.add(type, 'show');
+                setTimeout(() => { messageBox.classList.remove('show'); }, 3000);
+            }
+
+            function generateTicketNumber(prefix) { return `${prefix}-${Math.floor(100 + Math.random() * 900)}`; }
+
+            function updateUI() {
+                const serviceTypeDisplay = document.getElementById('serviceTypeDisplay');
+                const waitTimeDiv = document.getElementById('waitTime');
+                const queuePositionDiv = document.getElementById('queuePosition');
+
+                if (ticket) {
+                    initialStateDiv.classList.add('hidden'); activeStateDiv.classList.remove('hidden');
+                    passwordActionsDiv.classList.add('hidden');
+                    serviceTypeDisplay.textContent = ticket.service;
+                    waitTimeDiv.innerHTML = `<i class="fa-regular fa-clock"></i> ~${ticket.waitTime} min`;
+                    const ticketColor = ticket.type === 'emergency' ? 'text-red-500' : 'text-orange-500';
+                    queuePositionDiv.innerHTML = `Sua senha: <span class="font-bold ${ticketColor}">${ticket.number}</span> | Posição: <span class="font-bold text-gray-800">${ticket.position}º lugar</span>`;
+                } else {
+                    initialStateDiv.classList.remove('hidden'); activeStateDiv.classList.add('hidden');
+                    passwordActionsDiv.classList.remove('hidden');
+                }
+            }
+
+            function createTicket(type, orderDetails) {
+                if (ticket) { showMessage('Você já possui um atendimento em andamento.', 'error'); return; }
+                const isEmergency = type === 'emergency';
+                ticket = {
+                    number: generateTicketNumber(isEmergency ? 'EMER' : 'COM'),
+                    type: type,
+                    position: isEmergency ? Math.floor(1 + Math.random() * 3) : Math.floor(5 + Math.random() * 10),
+                    waitTime: isEmergency ? Math.floor(5 + Math.random() * 5) : Math.floor(15 + Math.random() * 10),
+                    service: orderDetails.serviceType,
+                    details: orderDetails
+                };
+                updateUI();
+            }
+
+            // --- EVENT LISTENERS ---
+            document.querySelectorAll('.password-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const type = e.currentTarget.dataset.type;
+                    openModal(getOrderFormHTML(type));
+                    
+                    document.getElementById('orderForm').addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        const orderDetails = {
+                            serviceType: document.getElementById('serviceType').value,
+                            vehicleType: document.getElementById('vehicleType').value,
+                            licensePlate: document.getElementById('licensePlate').value,
+                            notes: document.getElementById('notes').value
+                        };
+                         if (type === 'emergency') {
+                            orderDetails.emergencyCriteria = document.getElementById('emergencyCriteria').value;
+                            orderDetails.emergencyNotes = document.getElementById('emergencyNotes').value;
+                            analyzeEmergencyRequest(orderDetails);
+                        } else {
+                            createTicket('common', orderDetails);
+                            showMessage('Senha gerada com sucesso!', 'success');
+                            closeModal();
+                        }
+                    });
+
+                    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+                });
+            });
+
+            document.getElementById('infoBtn').addEventListener('click', () => {
+                openModal(getInfoHTML());
+                document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            });
+            
+            modalContainer.addEventListener('click', (e) => { if (e.target === modalContainer) closeModal(); });
+            document.getElementById('cancelButton').addEventListener('click', () => { ticket = null; showMessage('Seu atendimento foi cancelado.', 'info'); updateUI(); });
+            document.getElementById('scheduleBtn').addEventListener('click', () => { showMessage('Funcionalidade de agendamento em desenvolvimento.', 'info'); });
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                showMessage('Saindo... Até logo!', 'success');
+                setTimeout(() => { window.location.href = 'Index.html'; }, 1500);
+            });
+            
+            updateUI(); // Renderiza o estado inicial
+        });
+    </script>
+</body>
+</html>
+

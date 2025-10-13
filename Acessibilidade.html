@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acessibilidade e Suporte | TEC&INOVA</title>
+    <!-- Inclui o Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclui a fonte Inter do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inclui Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+        }
+        /* Estilos para a caixa de mensagem de feedback */
+        #messageBox {
+            position: fixed; top: 2rem; left: 50%; transform: translateX(-50%);
+            padding: 1rem 2rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.5s ease; opacity: 0;
+            z-index: 1000; color: white; pointer-events: none;
+        }
+        #messageBox.show { opacity: 1; }
+        #messageBox.success { background-color: #10B981; }
+
+        /* Estilos para o Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 52px; height: 32px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 32px; }
+        .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2563EB; }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body class="flex justify-center">
+
+    <!-- Caixa de Mensagem para Feedback -->
+    <div id="messageBox"></div>
+
+    <div class="w-full max-w-md bg-white min-h-screen shadow-lg">
+        <!-- Cabeçalho -->
+        <header class="bg-gray-50 border-b p-4 flex items-center sticky top-0 z-10">
+            <a href="file:///C:/Users/0001150903/Downloads/Vs.code/TCC/Dashboard%20do%20Cliente.html" class="text-gray-600 hover:text-blue-600">
+                <i class="fa-solid fa-arrow-left fa-lg"></i>
+            </a>
+            <h1 class="text-xl font-bold text-gray-800 text-center flex-grow">Acessibilidade e Suporte</h1>
+        </header>
+
+        <!-- Conteúdo Principal -->
+        <main class="p-6">
+            <form id="accessibilityForm">
+                <!-- Seção de Atendimento Preferencial -->
+                <section class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">Atendimento Preferencial</h2>
+                    <div class="bg-white p-4 rounded-lg border space-y-4">
+                        <label for="priorityToggle" class="flex justify-between items-center cursor-pointer">
+                            <span class="font-medium text-gray-800">Solicitar Atendimento Prioritário</span>
+                            <div class="switch">
+                                <input type="checkbox" id="priorityToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                        <hr>
+                        <label for="librasSupport" class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="librasSupport" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-3">
+                            <span class="text-gray-700">Necessito de Suporte em Libras</span>
+                        </label>
+                        <div class="pt-2">
+                             <label for="supportNotes" class="block text-sm font-medium text-gray-700 mb-1">Observações Adicionais</label>
+                             <textarea id="supportNotes" rows="3" placeholder="Ex: Necessito de auxílio para locomoção." class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção de Configurações do App -->
+                <section>
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">Configurações do Aplicativo</h2>
+                    <div class="bg-white p-4 rounded-lg border space-y-4">
+                         <label for="screenReaderToggle" class="flex justify-between items-center cursor-pointer">
+                            <span class="font-medium text-gray-800">Ativar Leitor de Tela</span>
+                            <div class="switch">
+                                <input type="checkbox" id="screenReaderToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                        <hr>
+                         <label for="voiceCommandsToggle" class="flex justify-between items-center cursor-pointer">
+                            <span class="font-medium text-gray-800">Ativar Comandos de Voz</span>
+                            <div class="switch">
+                                <input type="checkbox" id="voiceCommandsToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                        <hr>
+                        <label for="contrastToggle" class="flex justify-between items-center cursor-pointer">
+                            <span class="font-medium text-gray-800">Ativar Contraste Dinâmico</span>
+                            <div class="switch">
+                                <input type="checkbox" id="contrastToggle">
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+                
+                <!-- Botão Salvar -->
+                <div class="mt-8">
+                     <button type="submit" class="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                        Salvar Preferências
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = '';
+            messageBox.classList.add(type, 'show');
+            setTimeout(() => { messageBox.classList.remove('show'); }, 3000);
+        }
+
+        document.getElementById('accessibilityForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Aqui você poderia adicionar a lógica para salvar as preferências do usuário
+            showMessage('Suas preferências de acessibilidade foram salvas com sucesso!');
+        });
+    </script>
+</body>
+</html>
